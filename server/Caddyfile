@@ -1,0 +1,16 @@
+# Cloudflare (Full strict) connects with the Origin certificate; everything goes to the launcher.
+{
+	auto_https off
+}
+
+{$DOMAIN}, *.{$DOMAIN} {
+	tls /certs/origin.pem /certs/origin.key
+	request_body {
+		max_size 200MB
+	}
+	reverse_proxy launcher:8080
+}
+
+http://{$DOMAIN}, http://*.{$DOMAIN} {
+	redir https://{host}{uri} permanent
+}
