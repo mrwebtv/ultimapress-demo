@@ -555,13 +555,16 @@ async function leads(res) {
  */
 const BOTS = /bot|crawl|spider|slurp|preview|monitor|uptime|curl|wget|python|headless|lighthouse/i
 let salt = { day: '', value: '' }
-function recordView(req, url) {
+// Counted only when the page's own script reports a real browser that kept the tab open for 3 seconds
+// (bots rarely run scripts), and never for the owner: opening /stats marks that browser as "me".
+const ME = /(?:^|;\s*)up_me=1(?:;|$)/
+function recordView(req, source) {
   const ua = String(req.headers['user-agent'] || '')
-  if (!ua || BOTS.test(ua)) return
+  if (!ua || BOTS.test(ua) || ME.test(String(req.headers.cookie || ''))) return
   const day = new Date().toISOString().slice(0, 10)
   if (salt.day !== day) salt = { day, value: rand(16) }
   const visitor = crypto.createHash('sha256').update(`${salt.value}|${clientIp(req)}|${ua}`).digest('hex').slice(0, 24)
-  db.query('insert into page_views (visitor, country, source) values ($1, $2, $3)', [visitor, countryOf(req), sourceOf(req, url)]).catch(
+  db.query('insert into page_views (visitor, country, source) values ($1, $2, $3)', [visitor, countryOf(req), cleanSource(source) || 'direct']).catch(
     () => undefined,
   )
 }
@@ -629,7 +632,6 @@ async function statsPage(res) {
 async function home(req, res, url) {
   const p = url.pathname
   if (req.method === 'GET' && p === '/') {
-    recordView(req, url)
     return send(res, 200, landing({ siteKey: TS_SITE, minutes: MINUTES, source: sourceOf(req, url), paused: PAUSED, ...(await usage()) }))
   }
   if (req.method === 'POST' && p === '/start') return start(req, res)
@@ -669,7 +671,15 @@ async function home(req, res, url) {
     return fs.createReadStream(file).pipe(res)
   }
   // Totals only (no names or emails), so no password; the leads list keeps one.
-  if (req.method === 'GET' && p === '/stats') return statsPage(res)
+  if (req.method === 'GET' && p === '/stats') {
+    res.setHeader('set-cookie', 'up_me=1; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax')
+    return statsPage(res)
+  }
+  if (req.method === 'POST' && p === '/api/seen') {
+    const body = await readBody(req, 512).catch(() => '')
+    if (req.headers['x-up-seen'] === '1') recordView(req, body)
+    return send(res, 204, '')
+  }
   if (req.method === 'GET' && p === '/leads.csv') {
     if (!leadsAllowed(req)) return send(res, 401, 'Log in', { 'www-authenticate': 'Basic realm="UltimaPress trial"' })
     return leads(res)

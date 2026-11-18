@@ -215,6 +215,7 @@ export function landing({ siteKey, error = '', email = '', minutes, inUse = 0, m
         // Pressing Try now before the check has finished waits for it, instead of sending an empty check.
         `<script>
 document.addEventListener('submit',function(e){var f=e.target;if(!f.classList||!f.classList.contains('lp-form'))return;var t=f.querySelector('[name="cf-turnstile-response"]');if(t&&t.value)return;e.preventDefault();f.dataset.waiting='1';var b=f.querySelector('button[type="submit"]');if(b){b.disabled=true;b.textContent='Checking you are human…'}setTimeout(function(){if(f.dataset.waiting){f.removeAttribute('data-waiting');f.submit()}},10000)});
+(function(){var src=${JSON.stringify(source).replace(/</g,'\\u003c')},t=null,sent=false;function go(){if(sent||document.visibilityState!=='visible')return;clearTimeout(t);t=setTimeout(function(){if(sent||document.visibilityState!=='visible')return;sent=true;fetch('/api/seen',{method:'POST',headers:{'x-up-seen':'1','content-type':'text/plain'},body:src,keepalive:true}).catch(function(){})},3000)}document.addEventListener('visibilitychange',go);go()})();
 window.upChecked=function(){var f=document.querySelector('form.lp-form[data-waiting]');if(f){f.removeAttribute('data-waiting');f.submit()}};
 </script>` +
         (full ? '<meta http-equiv="refresh" content="30">' : ''),
