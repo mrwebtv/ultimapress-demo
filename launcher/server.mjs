@@ -642,7 +642,11 @@ async function statsPage(res) {
       count(distinct (day, visitor)) filter (where day > current_date - 7)::int as week,
       count(distinct (day, visitor)) filter (where day > current_date - 30)::int as month
     from link_clicks where day > current_date - 30 group by place order by month desc`)
-  return send(res, 200, stats({ clicks, now, totals, views, use, refusals, days, countries: await by('country'), sources: await by('source'), endings, max: MAX }))
+  // Of the people who clicked Deploy in 1 Click, how many then clicked through to Hostinger that day.
+  const [deploy] = await q(`with d as (select distinct day, visitor from link_clicks where place like 'deploy-%' and day > current_date - 30),
+      h as (select distinct day, visitor from link_clicks where place = 'hostinger-page' and day > current_date - 30)
+    select (select count(*)::int from d) as deploy, (select count(*)::int from d join h using (day, visitor)) as went_on`)
+  return send(res, 200, stats({ clicks, deploy, now, totals, views, use, refusals, days, countries: await by('country'), sources: await by('source'), endings, max: MAX }))
 }
 
 async function home(req, res, url) {
@@ -664,6 +668,8 @@ async function home(req, res, url) {
     const c = url.searchParams.get('c') || ''
     const from = String(url.searchParams.get('from') || '').toLowerCase()
     recordClick(req, PLACE.test(from) ? from : CODE.test(c) ? 'trial-demo' : 'trial-page')
+    // "Deploy in 1 Click" on ultimapress.com: counted here, then on to the Hostinger page there.
+    if (url.searchParams.get('to') === 'hostinger-page') return redirect(res, 'https://ultimapress.com/hostinger')
     if (CODE.test(c)) {
       const u = await db.query('update visits set hosting_clicks = hosting_clicks + 1 where code = $1 returning id, hosting_clicks', [c])
       if (u.rows[0]?.hosting_clicks === 1) toOmnisend(u.rows[0].id)

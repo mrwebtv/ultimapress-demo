@@ -283,7 +283,7 @@ const table = (head, rows) =>
   }</tbody></table>`
 
 /** The owner's stats page (/stats). */
-export function stats({ clicks = [], now, totals, views, use, refusals = [], days, countries, sources, endings, max }) {
+export function stats({ clicks = [], deploy = { deploy: 0, went_on: 0 }, now, totals, views, use, refusals = [], days, countries, sources, endings, max }) {
   const tile = (label, value, sub = '') => `<div class="tile"><span>${esc(label)}</span><b>${esc(value)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</div>`
   return layout(
     'Trial stats',
@@ -374,9 +374,14 @@ export function stats({ clicks = [], now, totals, views, use, refusals = [], day
       r.month,
     ]),
   )}</div>
-  <h2>Hostinger link clicks</h2>
-  <p class="small" style="margin:-4px 0 12px">People who clicked through to Hostinger, by the page they clicked on (each person once a day).</p>
-  <div class="scroll" style="max-width:620px">${table(['Page', 'Today', 'Last 7 days', 'Last 30 days'], (clicks || []).map((c) => [esc(({ 'hostinger-page': 'ultimapress.com/hostinger', 'trial-demo': 'Demo banner and demo end', 'trial-page': 'Trial sign-up page' })[c.place] || c.place), c.today, c.week, c.month]))}</div>
+  <h2>Deploy in 1 Click</h2>
+  <div class="tiles" style="max-width:620px">
+    ${tile('Clicked Deploy in 1 Click', String(deploy.deploy), 'people, last 30 days')}
+    ${tile('Then clicked to Hostinger', pct(deploy.went_on, deploy.deploy), `${deploy.went_on} ${deploy.went_on === 1 ? 'person' : 'people'}`)}
+  </div>
+  <h2>Link clicks</h2>
+  <p class="small" style="margin:-4px 0 12px">People who clicked, by where they clicked (each person once a day).</p>
+  <div class="scroll" style="max-width:620px">${table(['Page', 'Today', 'Last 7 days', 'Last 30 days'], (clicks || []).map((c) => [esc(({ 'hostinger-page': 'ultimapress.com/hostinger', 'trial-demo': 'Demo banner and demo end', 'trial-page': 'Trial sign-up page', 'deploy-header': 'Deploy in 1 Click (header, not a Hostinger click)', 'deploy-page': 'Deploy in 1 Click (page buttons, not a Hostinger click)' })[c.place] || c.place), c.today, c.week, c.month]))}</div>
   <h2>How demos ended, last 30 days</h2>
   <div class="scroll" style="max-width:520px">${table(['Reason', 'Demos'], endings.map((e) => [esc(e.reason), e.n]))}</div>
   <p class="small" style="margin-top:28px">Tag your links to see them here: <code>https://tryultimapress.com/?ref=youtube-booking-video</code></p>`,
