@@ -558,6 +558,17 @@ let salt = { day: '', value: '' }
 // Counted only when the page's own script reports a real browser that kept the tab open for 3 seconds
 // (bots rarely run scripts), and never for the owner: opening /stats marks that browser as "me".
 const ME = /(?:^|;\s*)up_me=1(?:;|$)/
+/** One click on a Hostinger link, by the page it came from (people counted once a day, no cookies). */
+const PLACE = /^[a-z0-9-]{1,40}$/
+function recordClick(req, place) {
+  const ua = String(req.headers['user-agent'] || '')
+  if (!ua || BOTS.test(ua) || ME.test(String(req.headers.cookie || ''))) return
+  const day = new Date().toISOString().slice(0, 10)
+  if (salt.day !== day) salt = { day, value: rand(16) }
+  const visitor = crypto.createHash('sha256').update(`${salt.value}|${clientIp(req)}|${ua}`).digest('hex').slice(0, 24)
+  db.query('insert into link_clicks (place, visitor) values ($1, $2)', [place, visitor]).catch(() => undefined)
+}
+
 function recordView(req, source) {
   const ua = String(req.headers['user-agent'] || '')
   if (!ua || BOTS.test(ua) || ME.test(String(req.headers.cookie || ''))) return
@@ -626,7 +637,12 @@ async function statsPage(res) {
     from refusals group by reason order by month desc`)
   const endings = await q(`select coalesce(end_reason, 'still running') as reason, count(*)::int as n from demos
        where assigned_at is not null and created_at > now() - interval '30 days' group by 1 order by n desc`)
-  return send(res, 200, stats({ now, totals, views, use, refusals, days, countries: await by('country'), sources: await by('source'), endings, max: MAX }))
+  const clicks = await q(`select place,
+      count(distinct (day, visitor)) filter (where day = current_date)::int as today,
+      count(distinct (day, visitor)) filter (where day > current_date - 7)::int as week,
+      count(distinct (day, visitor)) filter (where day > current_date - 30)::int as month
+    from link_clicks where day > current_date - 30 group by place order by month desc`)
+  return send(res, 200, stats({ clicks, now, totals, views, use, refusals, days, countries: await by('country'), sources: await by('source'), endings, max: MAX }))
 }
 
 async function home(req, res, url) {
@@ -646,6 +662,8 @@ async function home(req, res, url) {
   if (req.method === 'GET' && p === '/health') return send(res, 200, 'ok', { 'content-type': 'text/plain' })
   if (req.method === 'GET' && p === '/go') {
     const c = url.searchParams.get('c') || ''
+    const from = String(url.searchParams.get('from') || '').toLowerCase()
+    recordClick(req, PLACE.test(from) ? from : CODE.test(c) ? 'trial-demo' : 'trial-page')
     if (CODE.test(c)) {
       const u = await db.query('update visits set hosting_clicks = hosting_clicks + 1 where code = $1 returning id, hosting_clicks', [c])
       if (u.rows[0]?.hosting_clicks === 1) toOmnisend(u.rows[0].id)

@@ -83,6 +83,7 @@ export async function setup() {
     alter table demos add column if not exists active_minutes int not null default 0;
     alter table demos add column if not exists tried text;
     create table if not exists refusals (at timestamptz not null default now(), reason text not null);
+    create table if not exists link_clicks (at timestamptz not null default now(), day date not null default current_date, place text not null, visitor text not null);
   `)
   // Demo logins can only open their own database.
   for (const d of ['launcher', 'postgres', 'template1']) {
