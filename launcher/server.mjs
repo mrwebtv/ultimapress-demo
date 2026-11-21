@@ -646,7 +646,13 @@ async function statsPage(res) {
   const [deploy] = await q(`with d as (select distinct day, visitor from link_clicks where place like 'deploy-%' and day > current_date - 30),
       h as (select distinct day, visitor from link_clicks where place = 'hostinger-page' and day > current_date - 30)
     select (select count(*)::int from d) as deploy, (select count(*)::int from d join h using (day, visitor)) as went_on`)
-  return send(res, 200, stats({ clicks, deploy, now, totals, views, use, refusals, days, countries: await by('country'), sources: await by('source'), endings, max: MAX }))
+  // Viewed a page on ultimapress.com, then clicked its Hostinger button (same person, same day).
+  const funnels = await q(`select f.page, f.label,
+      (select count(*)::int from (select distinct day, visitor from link_clicks where place = f.view and day > current_date - 30) v) as viewed,
+      (select count(*)::int from (select distinct day, visitor from link_clicks where place = f.view and day > current_date - 30) v
+         join (select distinct day, visitor from link_clicks where place = f.click and day > current_date - 30) c using (day, visitor)) as clicked
+    from (values ('docs', 'Docs', 'view-docs', 'docs-page'), ('hostinger', 'Hostinger page', 'view-hostinger', 'hostinger-page')) f(page, label, view, click)`)
+  return send(res, 200, stats({ clicks, deploy, funnels, now, totals, views, use, refusals, days, countries: await by('country'), sources: await by('source'), endings, max: MAX }))
 }
 
 async function home(req, res, url) {
@@ -696,8 +702,14 @@ async function home(req, res, url) {
   }
   // Totals only (no names or emails), so no password; the leads list keeps one.
   if (req.method === 'GET' && p === '/stats') {
-    res.setHeader('set-cookie', 'up_me=1; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax')
+    res.setHeader('set-cookie', 'up_me=1; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=None')
     return statsPage(res)
+  }
+  // Views of ultimapress.com pages, sent by a small script there after 3 seconds on the page.
+  if (req.method === 'POST' && p === '/api/pv') {
+    const page = (await readBody(req, 64).catch(() => '')).trim()
+    if (page === 'docs' || page === 'hostinger') recordClick(req, `view-${page}`)
+    return send(res, 204, '')
   }
   if (req.method === 'POST' && p === '/api/seen') {
     const body = await readBody(req, 512).catch(() => '')
