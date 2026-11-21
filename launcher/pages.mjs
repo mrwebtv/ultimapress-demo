@@ -28,6 +28,10 @@ input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #fff;
 .btn{display:inline-flex;align-items:center;justify-content:center;height:50px;padding:0 22px;border-radius:12px;border:0;font:inherit;font-weight:700;
   color:#fff;background:linear-gradient(90deg,var(--a),var(--b));text-decoration:none;cursor:pointer}
 .btn--wide{width:100%}
+.deal{--g:#3ee07a;max-width:760px;margin:28px auto 0;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;padding:20px 22px;border:2px solid var(--g);border-radius:16px;background:rgba(62,224,122,.07);text-align:left}
+.deal__big{font-size:50px;font-weight:900;color:var(--g);line-height:.9;text-align:center}.deal__big small{display:block;font-size:14px;font-weight:800;letter-spacing:.06em;margin-top:4px}
+.deal p{margin:0;font-size:16px;color:var(--muted)}.deal strong{color:var(--text)}
+@media(max-width:700px){.deal{grid-template-columns:1fr;text-align:center}}
 .btn--ghost{background:transparent;border:1px solid var(--line)}
 .small{font-size:14px;color:var(--muted);margin:14px 0 0}
 .slots{border-radius:12px;padding:14px 16px;margin:0 0 16px;font-size:17px;line-height:1.45;text-align:center}
@@ -171,7 +175,7 @@ export function landing({ siteKey, error = '', email = '', minutes, inUse = 0, m
         <dl>
           <dt>This test drive</dt><dd><strong>Free</strong>, ${hours}</dd>
           <dt>UltimaPress</dt><dd><strong>Free</strong>, no plan, no subscription</dd>
-          <dt>Your own site</dt><dd>You just need <strong>a server</strong> capable of running it. We use and recommend <a href="/go" target="_blank" rel="noopener">Hostinger VPS</a></dd>
+          <dt>Your own site</dt><dd>You just need <strong>a server</strong> capable of running it. We use and recommend <a href="/go" target="_blank" rel="noopener">Hostinger VPS</a>, with <strong style="color:#3ee07a">an extra 10% off</strong> through our link (code MRWEB applied automatically)</dd>
         </dl>
       </div>
       <p class="lp-fine">By clicking Try now you agree to receive marketing emails from Mr Web about UltimaPress. You can unsubscribe at any time. Your demo and everything in it are deleted after ${hours}.</p>
@@ -256,10 +260,8 @@ export function ended({ code, canDownload, hosting, minutes }) {
       ? 'Your site is saved for 7 days. Install UltimaPress on your own server, then go to Backups, Restore from a file, and upload it. It comes back exactly as you left it.'
       : `Demos are deleted after ${span(minutes)}. Install UltimaPress on your own server to keep building.`
   }</p>
-  <div class="acts">
-    <a class="btn" href="${esc(hosting)}">Get your VPS</a>
-    ${canDownload ? `<a class="btn btn--ghost" href="/kept/${esc(code)}">Download my site</a>` : ''}
-  </div>
+  ${canDownload ? `<div class="acts"><a class="btn btn--ghost" href="/kept/${esc(code)}">Download my site</a></div>` : ''}
+  <div class="deal"><div class="deal__big">10%<small>EXTRA OFF</small></div><p>On top of Hostinger's sale price, only through my link. Code <strong>MRWEB</strong> is applied automatically.</p><a class="btn" href="${esc(hosting)}">Get Hosting Now</a></div>
   <p class="small" style="margin-top:28px"><a href="https://ultimapress.com/docs" style="color:var(--muted)">How to install UltimaPress</a></p>
   </div>`,
   )

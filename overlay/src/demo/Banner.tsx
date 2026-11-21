@@ -94,7 +94,7 @@ export function DemoBanner() {
         <span className="up-demo__msg">
           {soon
             ? 'Your demo will be deleted soon. Download your site to keep it.'
-            : "Like what you've built? Run UltimaPress on your own server."}
+            : "Like what you've built? Run UltimaPress on your own server, with an extra 10% off Hostinger through my link."}
         </span>
         <span className="up-demo__acts">
           <a className="up-demo__btn up-demo__btn--main" href={hosting}>
