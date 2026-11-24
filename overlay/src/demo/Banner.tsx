@@ -55,7 +55,7 @@ export function DemoBanner() {
 
   if (!info?.assigned || !info.expiresAt) return null
   const left = Date.parse(info.expiresAt) - now
-  const hosting = `${info.home}/go?c=${encodeURIComponent(info.code)}`
+  const hosting = 'https://www.hostinger.com/mrwebvps'
   const soon = left <= 15 * 60_000
 
   const end = async () => {

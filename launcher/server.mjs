@@ -485,7 +485,7 @@ async function start(req, res) {
     return send(
       res,
       429,
-      message('You have had your demo today', 'Each person gets one demo a day. Install UltimaPress on your own server to keep going, with no time limit.', { hosting: HOSTING }),
+      message('You have had your demo today', 'Each person gets one demo a day. Install UltimaPress on your own server to keep going, with no time limit.', { hosting: 'https://www.hostinger.com/mrwebvps' }),
     )
   }
   const key = rand(24)
@@ -688,7 +688,7 @@ async function home(req, res, url) {
     const v = await visitor(req)
     const file = path.join(KEPT, `${code}.tar`)
     const mine = v?.code === code && fs.existsSync(file)
-    if (kind === 'ended') return send(res, 200, ended({ code, canDownload: mine, hosting: `/go?c=${code}`, minutes: MINUTES }))
+    if (kind === 'ended') return send(res, 200, ended({ code, canDownload: mine, hosting: 'https://www.hostinger.com/mrwebvps', minutes: MINUTES }))
     if (!mine) return redirect(res, `/ended/${code}`)
     const k = await db.query('update visits set kept_downloads = kept_downloads + 1 where id = $1 returning kept_downloads', [v.id])
     if (k.rows[0].kept_downloads === 1) toOmnisend(v.id)

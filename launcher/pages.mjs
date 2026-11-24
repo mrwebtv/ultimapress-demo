@@ -175,7 +175,7 @@ export function landing({ siteKey, error = '', email = '', minutes, inUse = 0, m
         <dl>
           <dt>This test drive</dt><dd><strong>Free</strong>, ${hours}</dd>
           <dt>UltimaPress</dt><dd><strong>Free</strong>, no plan, no subscription</dd>
-          <dt>Your own site</dt><dd>You just need <strong>a server</strong> capable of running it. We use and recommend <a href="/go" target="_blank" rel="noopener">Hostinger VPS</a>, with <strong style="color:#3ee07a">an extra 10% off</strong> through our link (code MRWEB applied automatically)</dd>
+          <dt>Your own site</dt><dd>You just need <strong>a server</strong> capable of running it. We use and recommend <a href="https://www.hostinger.com/mrwebvps" target="_blank" rel="noopener">Hostinger VPS</a>, with <strong style="color:#3ee07a">an extra 10% off</strong> through our link (code MRWEB applied automatically)</dd>
         </dl>
       </div>
       <p class="lp-fine">By clicking Try now you agree to receive marketing emails from Mr Web about UltimaPress. You can unsubscribe at any time. Your demo and everything in it are deleted after ${hours}.</p>
